@@ -1,0 +1,224 @@
+{
+  "id": "pmLeadIntake0001",
+  "name": "Website lead to HubSpot",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodes": [
+    {
+      "id": "b0000000-0000-4000-8000-000000000001",
+      "name": "About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "parameters": {
+        "content": "## Website lead -> HubSpot\n1. Your form posts JSON to this webhook (`email`, `name`, `company`, `website`, `country`, `budget_usd`, `message`).\n2. The toolkit validates, dedupes, enriches and scores it (`POST /leads`).\n3. Score >= threshold and not a duplicate -> upsert HubSpot contact + Gmail to sales.\n\nPick your HubSpot (private app token) and Gmail credentials. Env: `SALES_EMAIL`, `LEAD_SCORE_THRESHOLD`.",
+        "width": 520,
+        "height": 280
+      }
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000002",
+      "name": "Form webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "6f1c2a8e-3d4b-4c5a-9e7f-1a2b3c4d5e6f"
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000003",
+      "name": "Toolkit: POST /leads",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.TOOLKIT_API_URL }}/leads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $env.TOOLKIT_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000004",
+      "name": "Reply to form",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        460,
+        180
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, lead_id: $json.id, duplicate: $json.duplicate }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000005",
+      "name": "Qualified and new?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        460,
+        -60
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.score }}",
+              "rightValue": "={{ $env.LEAD_SCORE_THRESHOLD || 60 }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.duplicate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000006",
+      "name": "HubSpot: upsert contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.1,
+      "position": [
+        700,
+        -160
+      ],
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "contact",
+        "operation": "upsert",
+        "email": "={{ $json.email }}",
+        "additionalFields": {
+          "firstName": "={{ ($('Form webhook').item.json.body.name ?? '').split(' ')[0] }}",
+          "lastName": "={{ ($('Form webhook').item.json.body.name ?? '').split(' ').slice(1).join(' ') }}",
+          "companyName": "={{ $('Form webhook').item.json.body.company ?? '' }}",
+          "websiteUrl": "={{ $json.company_domain ?? '' }}",
+          "country": "={{ $json.country ?? '' }}",
+          "lifeCycleStage": "lead"
+        }
+      }
+    },
+    {
+      "id": "b0000000-0000-4000-8000-000000000007",
+      "name": "Gmail: alert sales",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        920,
+        -160
+      ],
+      "parameters": {
+        "sendTo": "={{ $env.SALES_EMAIL }}",
+        "subject": "=New qualified lead (score {{ $('Toolkit: POST /leads').item.json.score }})",
+        "emailType": "text",
+        "message": "={{ $('Form webhook').item.json.body.name }} <{{ $('Toolkit: POST /leads').item.json.email }}>\nCompany: {{ $('Form webhook').item.json.body.company }}\nCountry: {{ $('Toolkit: POST /leads').item.json.country }}\nWhy: {{ $('Toolkit: POST /leads').item.json.score_reasons.join(', ') }}\n\n{{ $('Form webhook').item.json.body.message }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Form webhook": {
+      "main": [
+        [
+          {
+            "node": "Toolkit: POST /leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Toolkit: POST /leads": {
+      "main": [
+        [
+          {
+            "node": "Qualified and new?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reply to form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qualified and new?": {
+      "main": [
+        [
+          {
+            "node": "HubSpot: upsert contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "HubSpot: upsert contact": {
+      "main": [
+        [
+          {
+            "node": "Gmail: alert sales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

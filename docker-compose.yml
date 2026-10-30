@@ -66,6 +66,11 @@ services:
       N8N_SECURE_COOKIE: "false"
       GENERIC_TIMEZONE: UTC
       TOOLKIT_API_URL: http://api:8000
+      TOOLKIT_API_KEY: ${API_KEY:-change-me}
+      GOOGLE_SHEET_ID: ${GOOGLE_SHEET_ID:-}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+      SALES_EMAIL: ${SALES_EMAIL:-}
+      LEAD_SCORE_THRESHOLD: ${LEAD_SCORE_THRESHOLD:-60}
       N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
     volumes:
       - n8n_data:/home/node/.n8n

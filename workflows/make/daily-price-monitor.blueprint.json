@@ -1,0 +1,130 @@
+{
+  "name": "Daily competitor price monitor",
+  "flow": [
+    {
+      "id": 1,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {},
+      "mapper": {
+        "url": "https://YOUR-TOOLKIT-HOST/jobs/scrape?target=books&wait=true",
+        "method": "post",
+        "headers": [
+          {
+            "name": "X-API-Key",
+            "value": "YOUR_API_KEY"
+          }
+        ],
+        "parseResponse": true,
+        "timeout": "300"
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "builtin:BasicFeeder",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "array": "{{1.data.changes}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": null
+      },
+      "mapper": {
+        "mode": "select",
+        "insertUnformatted": false,
+        "valueInputOption": "USER_ENTERED",
+        "from": "drive",
+        "spreadsheetId": "YOUR_SHEET_ID",
+        "sheetId": "changes",
+        "includesHeaders": true,
+        "values": {
+          "0": "{{2.created_at}}",
+          "1": "{{2.type}}",
+          "2": "{{2.source}}",
+          "3": "{{2.product_title}}",
+          "4": "{{2.old_value}}",
+          "5": "{{2.new_value}}",
+          "6": "{{2.pct_change}}",
+          "7": "{{2.product_url}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 4,
+      "module": "util:TextAggregator",
+      "version": 1,
+      "parameters": {
+        "feeder": 2,
+        "rowSeparator": "\n"
+      },
+      "mapper": {
+        "value": "{{2.type}}: {{2.product_title}} {{2.old_value}} -> {{2.new_value}} ({{2.pct_change}}%) {{2.product_url}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 5,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {},
+      "mapper": {
+        "url": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+        "method": "post",
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "data": "{\"text\": \"*Competitor changes today*\\n{{replace(4.text; \"\"\"\"; \"'\")}}\"}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": false,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false
+    },
+    "designer": {
+      "orphans": []
+    }
+  }
+}

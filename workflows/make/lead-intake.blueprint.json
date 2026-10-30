@@ -1,0 +1,123 @@
+{
+  "name": "Website lead to HubSpot",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": null,
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {},
+      "mapper": {
+        "url": "https://YOUR-TOOLKIT-HOST/leads",
+        "method": "post",
+        "headers": [
+          {
+            "name": "X-API-Key",
+            "value": "YOUR_API_KEY"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "parseResponse": true,
+        "data": "{{toString(1)}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "hubspotcrm:createUpdateContact",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": null
+      },
+      "mapper": {
+        "email": "{{2.data.email}}",
+        "company": "{{1.company}}",
+        "website": "{{2.data.company_domain}}",
+        "country": "{{2.data.country}}",
+        "lifecyclestage": "lead"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        }
+      },
+      "filter": {
+        "name": "Qualified and not a duplicate",
+        "conditions": [
+          [
+            {
+              "a": "{{2.data.score}}",
+              "b": "60",
+              "o": "number:greaterorequal"
+            },
+            {
+              "a": "{{2.data.duplicate}}",
+              "b": "false",
+              "o": "boolean:equal"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "module": "google-email:ActionSendEmail",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": null
+      },
+      "mapper": {
+        "to": [
+          "sales@your-company.com"
+        ],
+        "subject": "New qualified lead (score {{2.data.score}})",
+        "content": "{{1.name}} <{{2.data.email}}> from {{1.company}} ({{2.data.country}})\n\n{{1.message}}",
+        "bodyType": "rawHtml"
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false
+    },
+    "designer": {
+      "orphans": []
+    }
+  }
+}
