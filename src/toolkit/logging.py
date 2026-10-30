@@ -7,6 +7,9 @@ import structlog
 
 
 def configure_logging(level: str = "INFO", json: bool = True) -> None:
+    # Windows consoles default to cp1252; alert texts contain emoji.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
     logging.basicConfig(format="%(message)s", stream=sys.stdout, level=level.upper())
     renderer: structlog.types.Processor = (
         structlog.processors.JSONRenderer() if json else structlog.dev.ConsoleRenderer()

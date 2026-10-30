@@ -14,7 +14,8 @@ from toolkit.config import get_settings
 from toolkit.db.models import Product
 from toolkit.db.repositories import all_products
 from toolkit.db.session import get_sessionmaker
-from toolkit.integrations.factory import build_change_sink
+from toolkit.integrations.factory import build_change_sink, build_sheets, integration_modes
+from toolkit.integrations.sinks import sync_products_sheet
 from toolkit.logging import configure_logging
 from toolkit.services.export import to_csv, write_xlsx
 from toolkit.services.jobs import create_job, run_scrape_job
@@ -86,6 +87,19 @@ def export(
 
     count = asyncio.run(_run())
     typer.echo(f"wrote {count} products to {path}")
+
+
+@app.command("sync-sheets")
+def sync_sheets() -> None:
+    """Rewrite the `products` tab of the Google Sheet (or demo CSV) from the database."""
+    settings = get_settings()
+
+    async def _run() -> int:
+        return await sync_products_sheet(build_sheets(settings), get_sessionmaker())
+
+    count = asyncio.run(_run())
+    mode = integration_modes(settings)["sheets"]
+    typer.echo(f"synced {count} products to the products tab ({mode} mode)")
 
 
 @app.command("simulate-drift")
