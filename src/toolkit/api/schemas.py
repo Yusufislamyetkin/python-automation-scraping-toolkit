@@ -77,3 +77,26 @@ class LeadOut(BaseModel):
     company_domain: str | None
     country: str | None
     score_reasons: list[str]
+
+
+class LeadRow(ORM):
+    id: int
+    email: str
+    name: str | None
+    company: str | None
+    company_domain: str | None
+    country: str | None
+    score: int
+    status: str
+    hubspot_contact_id: str | None
+    created_at: datetime
+
+
+class StatsOut(BaseModel):
+    products_total: int
+    in_stock: int
+    out_of_stock: int
+    changes_24h: dict[str, int]
+    leads_7d: int
+    qualified_7d: int
+    last_run: JobOut | None

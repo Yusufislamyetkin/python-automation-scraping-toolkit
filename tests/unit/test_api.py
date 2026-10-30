@@ -159,3 +159,27 @@ async def test_low_quality_lead_not_qualified(client: httpx.AsyncClient) -> None
 async def test_invalid_email_rejected(client: httpx.AsyncClient) -> None:
     r = await client.post("/leads", json={"email": "not-an-email"}, headers=KEY)
     assert r.status_code == 422
+
+
+async def test_dashboard_endpoints(
+    client: httpx.AsyncClient, sessionmaker: async_sessionmaker[AsyncSession]
+) -> None:
+    await _seed(sessionmaker)
+    page = await client.get("/dashboard/")
+    assert page.status_code == 200
+    assert "Competitor Monitor" in page.text
+
+    stats = (await client.get("/stats")).json()
+    assert stats["products_total"] == 2
+    assert stats["out_of_stock"] == 1
+    assert stats["last_run"] is None  # seeded job never ran
+
+    jobs = (await client.get("/jobs")).json()
+    assert len(jobs) == 1 and jobs[0]["status"] == "queued"
+
+
+async def test_lead_list_requires_key(client: httpx.AsyncClient) -> None:
+    assert (await client.get("/leads")).status_code == 401
+    await client.post("/leads", json=LEAD, headers=KEY)
+    rows = (await client.get("/leads", headers=KEY)).json()
+    assert rows[0]["email"] == "jane@acmeoutdoor.de"

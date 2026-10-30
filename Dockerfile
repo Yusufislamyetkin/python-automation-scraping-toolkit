@@ -12,14 +12,15 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
+# Chromium for the JS-rendered target (quotes.toscrape.com/js)
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN playwright install --with-deps chromium
+
 COPY README.md alembic.ini ./
 COPY migrations ./migrations
 COPY src ./src
 RUN uv sync --frozen --no-dev
 
-# Chromium for the JS-rendered target (quotes.toscrape.com/js)
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-RUN playwright install --with-deps chromium
 
 RUN useradd --create-home app && mkdir -p /app/data && chown -R app /app/data
 USER app

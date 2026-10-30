@@ -11,7 +11,7 @@ import typer
 from sqlalchemy import select
 
 from toolkit.config import get_settings
-from toolkit.db.models import Product
+from toolkit.db.models import PriceSnapshot, Product
 from toolkit.db.repositories import all_products
 from toolkit.db.session import get_sessionmaker
 from toolkit.integrations.factory import build_change_sink, build_sheets, integration_modes
@@ -126,6 +126,15 @@ def simulate_drift(
                 elif p.current_price is not None:
                     factor = Decimal("1.15") if i % 3 == 0 else Decimal("0.85")
                     p.current_price = (p.current_price * factor).quantize(Decimal("0.01"))
+                # Record the altered state too, so the price-history chart shows the move.
+                session.add(
+                    PriceSnapshot(
+                        product_id=p.id,
+                        price=p.current_price,
+                        in_stock=p.in_stock,
+                        stock_count=p.stock_count,
+                    )
+                )
             await session.commit()
             return len(picked)
 

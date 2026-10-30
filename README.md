@@ -30,12 +30,22 @@ A small e-commerce shop sells the same products as several competitors. Every mo
 | 📊 **Updates a Google Sheet**: live `products` tab, `changes` log, `leads` log | 🔔 **Alerts** on Slack or Telegram, with email as a fallback |
 | 🎯 **Scores website leads**: validated, deduplicated, enriched with domain and country | 🤝 **Upserts qualified leads into HubSpot** and notifies the sales team |
 | 🧩 **Plugs into n8n and Make**: ready-to-import workflows included | 📈 **Logs every run**: status, duration, item counts, errors, raw HTML of failures |
+| 🖥️ **Web dashboard**: change feed, price history, lead tester, run log | 🐳 **One command to run**: `docker compose up`, demo mode without any accounts |
 
 ## See it work
 
-### Daily run: scrape → detect → Sheet → alert
+### 45-second walkthrough
 
-<p align="center"><img src="docs/images/demo-terminal.gif" alt="Terminal: a scrape run finding 6 price and stock changes" width="100%"></p>
+<p align="center"><a href="docs/images/demo.mp4"><img src="docs/images/demo.gif" alt="Dashboard walkthrough: run a scrape, see changes, open price history, submit a lead and get its score" width="100%"></a></p>
+<p align="center"><sub>Run a scrape → 6 changes detected → open a product's price history → send a website lead → score 95, qualified. <a href="docs/images/demo.mp4">Download the MP4</a>.</sub></p>
+
+### Dashboard: every change at a glance
+
+<p align="center"><img src="docs/images/dashboard-overview.png" alt="Dashboard overview with KPIs, change feed and run log" width="100%"></p>
+
+| Price history per product | Lead scoring and CRM sync |
+|---|---|
+| <img src="docs/images/dashboard-history.png" alt="Product drawer with price history chart"> | <img src="docs/images/dashboard-leads.png" alt="Lead form with score breakdown"> |
 
 ### The Google Sheet fills itself
 
@@ -45,13 +55,13 @@ A small e-commerce shop sells the same products as several competitors. Every mo
 
 <p align="center"><img src="docs/images/slack-alert.png" alt="Price alert message with drops, rises and back-in-stock items" width="100%"></p>
 
-### Website lead → score → HubSpot
-
-<p align="center"><img src="docs/images/lead-scoring.png" alt="Lead payload and the scored, enriched response" width="100%"></p>
-
 ### Ready-made n8n and Make workflows
 
 <p align="center"><img src="docs/images/workflows.png" alt="Workflow (a) daily price monitor and workflow (b) lead to HubSpot" width="100%"></p>
+
+### Scheduled runs from the CLI
+
+<p align="center"><img src="docs/images/demo-terminal.gif" alt="Terminal: a scrape run finding 6 price and stock changes" width="100%"></p>
 
 ## What this automates
 
@@ -127,6 +137,7 @@ docker compose up -d --build
 
 | Open | URL |
 |---|---|
+| **Dashboard** | http://localhost:8000/dashboard (API key: the `API_KEY` from `.env`) |
 | API docs (Swagger) | http://localhost:8000/docs |
 | Health and integration status | http://localhost:8000/health |
 | n8n editor | http://localhost:5678 |
@@ -149,12 +160,16 @@ No accounts are needed to try it. Without Google or HubSpot credentials, the too
 | Method | Path | Auth | Description |
 |---|---|---|---|
 | `POST` | `/jobs/scrape?target=books\|quotes[&wait=true]` | `X-API-Key` | Queue a scrape (202). With `wait=true` it runs inline and returns the job plus its change events, which suits n8n and Make |
+| `GET` | `/jobs?limit=` | - | Recent runs, newest first |
 | `GET` | `/jobs/{id}` | - | Run log: status, duration, counts, error, failure samples with snapshot paths |
 | `GET` | `/products?source=&in_stock=&limit=&offset=` | - | Current catalogue |
 | `GET` | `/products/{id}/history` | - | Price and stock history |
 | `GET` | `/changes?since=2026-10-30T00:00:00Z` | - | Change events since a timestamp |
 | `POST` | `/leads` | `X-API-Key` | Lead intake. Returns 201 for a new lead, or 200 with `duplicate: true` for a repeat |
+| `GET` | `/leads?limit=` | `X-API-Key` | Recent leads (personal data, so key required) |
+| `GET` | `/stats` | - | Dashboard headline numbers: products, 24h changes, leads, last run |
 | `GET` | `/export/products.csv` | - | CSV export |
+| `GET` | `/dashboard` | - | Web dashboard (static page calling the API) |
 | `GET` | `/health` | - | Database status and per-integration `live` / `demo` / `off` |
 
 ```bash
@@ -318,7 +333,7 @@ src/toolkit/
   scraping/      Scraper interface, polite HTTP client, static and JS-rendered scrapers
   services/      change detection, job runs, lead pipeline, export, job dispatch
   integrations/  Sheets, HubSpot, Slack/Telegram/SMTP clients, fakes, demo mode, business flows
-  api/           FastAPI app and routers
+  api/           FastAPI app, routers and the web dashboard
   worker/        ARQ worker and daily cron
   db/            models, session, queries
 migrations/      Alembic

@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Competitor Monitor · Automation Toolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7fb; --panel: #ffffff; --line: #e6e8f0; --text: #0f172a; --muted: #64748b; --soft: #94a3b8;
+    --brand: #4f46e5; --brand-soft: #eef2ff; --green: #059669; --green-soft: #ecfdf5; --red: #dc2626;
+    --red-soft: #fef2f2; --blue: #2563eb; --blue-soft: #eff6ff; --amber: #d97706; --amber-soft: #fffbeb;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text);
+         -webkit-font-smoothing: antialiased; font-size: 14px; }
+  button { font: inherit; cursor: pointer; }
+  input, select, textarea { font: inherit; color: inherit; }
+  .app { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+
+  /* sidebar */
+  aside { background: #0f172a; color: #cbd5e1; padding: 20px 14px; display: flex; flex-direction: column; gap: 4px; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 22px; }
+  .logo { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, #6366f1, #10b981);
+          display: grid; place-items: center; color: #fff; font-weight: 800; }
+  .brand b { color: #fff; font-size: 15px; display: block; } .brand small { color: #64748b; font-size: 12px; }
+  .nav { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px; color: #cbd5e1;
+         background: none; border: 0; text-align: left; width: 100%; }
+  .nav:hover { background: #1e293b; } .nav.active { background: #1e293b; color: #fff; font-weight: 600; }
+  .nav .count { margin-left: auto; background: #334155; color: #e2e8f0; font-size: 11px; padding: 1px 7px; border-radius: 99px; }
+  .side-foot { margin-top: auto; font-size: 12px; color: #64748b; padding: 10px; line-height: 1.6; }
+  .side-foot a { color: #94a3b8; }
+
+  /* main */
+  main { padding: 22px 30px 40px; min-width: 0; }
+  header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+  header h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
+  header .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .pills { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .pill { font-size: 12px; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--line); background: #fff;
+          color: var(--muted); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--soft); }
+  .pill.live i { background: #10b981; } .pill.demo i { background: #f59e0b; }
+  .btn { border: 1px solid var(--line); background: #fff; border-radius: 9px; padding: 8px 14px; font-weight: 600; color: var(--text); }
+  .btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; box-shadow: 0 4px 14px rgba(79,70,229,.25); }
+  .btn.primary:disabled { opacity: .75; cursor: progress; }
+  .btn:hover:not(:disabled) { filter: brightness(.97); }
+
+  .grid { display: grid; gap: 16px; }
+  .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .kpi { padding: 16px 18px; } .kpi .label { color: var(--muted); font-size: 12.5px; font-weight: 500; }
+  .kpi .value { font-size: 28px; font-weight: 800; margin-top: 6px; letter-spacing: -.02em; }
+  .kpi .hint { font-size: 12px; color: var(--soft); margin-top: 4px; }
+  .kpi .value.green { color: var(--green); } .kpi .value.red { color: var(--red); }
+  .two { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
+  .card-h { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+  .card-h h2 { font-size: 15px; margin: 0; } .card-h .meta { color: var(--soft); font-size: 12px; }
+  .card-h .right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  select.sel { border: 1px solid var(--line); border-radius: 9px; padding: 7px 10px; background: #fff; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--soft);
+       font-weight: 600; padding: 10px 18px; border-bottom: 1px solid var(--line); }
+  td { padding: 11px 18px; border-bottom: 1px solid #f1f3f8; vertical-align: middle; }
+  tr:last-child td { border-bottom: 0; }
+  tr.click { cursor: pointer; } tr.click:hover td { background: #fafbff; }
+  tr.flash td { animation: flash 2.4s ease-out; }
+  @keyframes flash { 0% { background: #fef9c3; } 100% { background: transparent; } }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .title-cell { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+  .tag { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 99px; white-space: nowrap; display: inline-block; }
+  .t-price_drop { background: var(--green-soft); color: var(--green); }
+  .t-price_rise { background: var(--red-soft); color: var(--red); }
+  .t-back_in_stock { background: var(--blue-soft); color: var(--blue); }
+  .t-out_of_stock { background: #f1f5f9; color: #475569; }
+  .t-new_product { background: var(--brand-soft); color: var(--brand); }
+  .delta.down { color: var(--green); font-weight: 700; } .delta.up { color: var(--red); font-weight: 700; }
+  .arrow { color: var(--soft); margin: 0 4px; }
+  .muted { color: var(--muted); } .soft { color: var(--soft); font-size: 12px; }
+  .empty { padding: 40px 18px; text-align: center; color: var(--soft); }
+
+  .runs { padding: 6px 0; }
+  .run { display: flex; align-items: center; gap: 12px; padding: 11px 18px; border-bottom: 1px solid #f1f3f8; }
+  .run:last-child { border-bottom: 0; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .s-succeeded { background: #10b981; } .s-partial { background: #f59e0b; } .s-failed { background: #ef4444; }
+  .s-running, .s-queued { background: #6366f1; animation: pulse 1s infinite alternate; }
+  @keyframes pulse { to { opacity: .35; } }
+  .run b { font-size: 13px; } .run .r { margin-left: auto; text-align: right; font-size: 12px; color: var(--muted); }
+
+  .banner { display: none; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px;
+            background: var(--brand-soft); border: 1px solid #c7d2fe; color: #3730a3; font-weight: 500; }
+  .banner.show { display: flex; } .banner.ok { background: var(--green-soft); border-color: #a7f3d0; color: #065f46; }
+  .spin { width: 16px; height: 16px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;
+          animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* drawer */
+  .scrim { position: fixed; inset: 0; background: rgba(15,23,42,.35); display: none; z-index: 10; }
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 520px; max-width: 100vw; background: #fff; z-index: 11;
+            transform: translateX(100%); transition: transform .25s ease; box-shadow: -20px 0 50px rgba(15,23,42,.15);
+            display: flex; flex-direction: column; }
+  .drawer.open { transform: none; } .scrim.open { display: block; }
+  .drawer .head { padding: 20px 22px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; }
+  .drawer .head h3 { margin: 0; font-size: 17px; line-height: 1.35; }
+  .drawer .body { padding: 20px 22px; overflow: auto; }
+  .x { margin-left: auto; border: 0; background: none; font-size: 22px; color: var(--soft); line-height: 1; }
+  .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+  .fact { background: #f8fafc; border-radius: 10px; padding: 10px 12px; } .fact small { color: var(--muted); font-size: 11.5px; }
+  .fact b { display: block; font-size: 18px; margin-top: 2px; }
+  .chart { width: 100%; height: 190px; }
+
+  /* leads */
+  .lead-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin-bottom: 16px; }
+  form.lead { padding: 18px; display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+  form.lead label { font-size: 12px; font-weight: 600; color: var(--muted); display: grid; gap: 5px; }
+  form.lead .full { grid-column: 1 / -1; }
+  form.lead input, form.lead textarea { border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; background: #fff; }
+  form.lead textarea { min-height: 76px; resize: vertical; }
+  .result { padding: 20px; display: none; } .result.show { display: block; }
+  .score-row { display: flex; gap: 20px; align-items: center; margin-bottom: 14px; }
+  .ring { width: 104px; height: 104px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+  .ring div { width: 80px; height: 80px; border-radius: 50%; background: #fff; display: grid; place-items: center;
+              font-size: 30px; font-weight: 800; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+  .reason { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 13.5px; }
+  .reason b { color: var(--green); }
+  .placeholder { padding: 40px 24px; color: var(--soft); text-align: center; line-height: 1.6; }
+
+  .search { border: 1px solid var(--line); border-radius: 9px; padding: 7px 11px; width: 240px; background: #fff; }
+  .stock-yes { color: var(--green); font-weight: 600; } .stock-no { color: var(--red); font-weight: 600; }
+  .view { display: none; } .view.active { display: block; }
+  .key-dlg { position: fixed; inset: 0; display: none; place-items: center; background: rgba(15,23,42,.35); z-index: 20; }
+  .key-dlg.open { display: grid; }
+  .key-dlg .card { padding: 22px; width: 380px; display: grid; gap: 12px; }
+  .key-dlg input { border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; }
+  .btn, .card-h h2 { white-space: nowrap; }
+  @media (max-width: 1500px) { .card-h .meta { display: none; } }
+  @media (max-width: 1100px) { .kpis { grid-template-columns: repeat(2, 1fr); } .two, .lead-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand"><div class="logo">CM</div><div><b>Competitor Monitor</b><small>Automation Toolkit</small></div></div>
+    <button class="nav active" data-view="overview">📈 Overview</button>
+    <button class="nav" data-view="catalogue">🛒 Catalogue <span class="count" id="nav-products">0</span></button>
+    <button class="nav" data-view="leads">🎯 Leads <span class="count" id="nav-leads">0</span></button>
+    <button class="nav" data-view="runs">🧾 Run log</button>
+    <div class="side-foot">
+      Integrations run live when credentials are set, otherwise in demo mode.<br>
+      <a href="/docs" target="_blank">API docs</a> · <a href="#" id="key-link">API key</a>
+    </div>
+  </aside>
+
+  <main>
+    <header>
+      <div><h1 id="page-title">Overview</h1><div class="sub" id="page-sub">Competitor prices, stock and alerts</div></div>
+      <div class="pills" id="pills"></div>
+    </header>
+
+    <div class="banner" id="banner"><div class="spin"></div><span id="banner-text"></span></div>
+
+    <!-- overview -->
+    <section class="view active" id="view-overview">
+      <div class="grid kpis">
+        <div class="card kpi"><div class="label">Products tracked</div><div class="value" id="k-products">–</div><div class="hint" id="k-stock">–</div></div>
+        <div class="card kpi"><div class="label">Price drops · 24h</div><div class="value green" id="k-drops">–</div><div class="hint">competitors cut prices</div></div>
+        <div class="card kpi"><div class="label">Price rises · 24h</div><div class="value red" id="k-rises">–</div><div class="hint" id="k-stockchg">–</div></div>
+        <div class="card kpi"><div class="label">Last run</div><div class="value" id="k-run">–</div><div class="hint" id="k-run-hint">–</div></div>
+      </div>
+      <div class="grid two">
+        <div class="card">
+          <div class="card-h"><h2>Change feed</h2><span class="meta">price &amp; stock changes, newest first</span>
+            <div class="right">
+              <select class="sel" id="target"><option value="books">books.toscrape.com</option><option value="quotes">quotes.toscrape.com/js</option></select>
+              <button class="btn primary" id="run-btn">▶ Run scrape now</button>
+            </div></div>
+          <table><thead><tr><th>Change</th><th>Product</th><th class="num">Old → New</th><th class="num">Δ</th><th class="num">When</th></tr></thead>
+            <tbody id="feed"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>Recent runs</h2><span class="meta">every run is logged</span></div>
+          <div class="runs" id="runs-mini"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- catalogue -->
+    <section class="view" id="view-catalogue">
+      <div class="card">
+        <div class="card-h"><h2>Catalogue</h2><span class="meta" id="cat-meta"></span>
+          <div class="right"><input class="search" id="search" placeholder="Search products…">
+            <a class="btn" href="/export/products.csv">⬇ Export CSV</a></div></div>
+        <table><thead><tr><th>Product</th><th>Source</th><th class="num">Price</th><th>Stock</th><th class="num">Last seen</th></tr></thead>
+          <tbody id="catalogue"></tbody></table>
+      </div>
+    </section>
+
+    <!-- leads -->
+    <section class="view" id="view-leads">
+      <div class="grid lead-grid">
+        <div class="card">
+          <div class="card-h"><h2>Test the lead webhook</h2><span class="meta">same payload your website form sends</span></div>
+          <form class="lead" id="lead-form">
+            <label>Email<input name="email" type="email" required placeholder="jane@company.com"></label>
+            <label>Name<input name="name" placeholder="Jane Doe"></label>
+            <label>Company<input name="company" placeholder="Acme GmbH"></label>
+            <label>Budget (USD)<input name="budget_usd" type="number" min="0" placeholder="5000"></label>
+            <label class="full">Message<textarea name="message" placeholder="What do you need?"></textarea></label>
+            <div class="full"><button class="btn primary" type="submit" id="lead-btn">Send lead → POST /leads</button></div>
+          </form>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>Result</h2><span class="meta">validated · deduplicated · enriched · scored</span></div>
+          <div class="placeholder" id="lead-placeholder">Submit a lead to see its score, the reasons behind it,<br>and whether it was pushed to HubSpot.</div>
+          <div class="result" id="lead-result"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Recent leads</h2><span class="meta">qualified leads are upserted into HubSpot by email</span></div>
+        <table><thead><tr><th>Lead</th><th>Company</th><th>Country</th><th class="num">Score</th><th>Status</th><th class="num">Received</th></tr></thead>
+          <tbody id="leads"></tbody></table>
+      </div>
+    </section>
+
+    <!-- runs -->
+    <section class="view" id="view-runs">
+      <div class="card">
+        <div class="card-h"><h2>Run log</h2><span class="meta">status, duration, item counts and errors for every job</span></div>
+        <table><thead><tr><th>Status</th><th>Target</th><th class="num">Items OK</th><th class="num">Failed</th><th class="num">Changes</th><th class="num">Duration</th><th class="num">Started</th><th>Error</th></tr></thead>
+          <tbody id="runs"></tbody></table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="drawer" id="drawer">
+  <div class="head"><div><div class="soft" id="d-source"></div><h3 id="d-title"></h3></div><button class="x" id="d-close">×</button></div>
+  <div class="body">
+    <div class="facts"><div class="fact"><small>Current price</small><b id="d-price"></b></div>
+      <div class="fact"><small>Stock</small><b id="d-stock"></b></div><div class="fact"><small>Snapshots</small><b id="d-count"></b></div></div>
+    <div class="soft" style="margin-bottom:6px">Price history</div>
+    <svg class="chart" id="d-chart" viewBox="0 0 476 190" preserveAspectRatio="none"></svg>
+    <table style="margin-top:14px"><thead><tr><th style="padding-left:0">Scraped</th><th class="num">Price</th><th>Stock</th></tr></thead><tbody id="d-hist"></tbody></table>
+    <p style="margin-top:16px"><a id="d-link" target="_blank" class="btn">Open product page ↗</a></p>
+  </div>
+</div>
+
+<div class="key-dlg" id="key-dlg"><div class="card">
+  <b>API key</b><span class="soft">Sent as the <code>X-API-Key</code> header on POST requests. Stored only in this browser.</span>
+  <input id="key-input" placeholder="API_KEY from your .env">
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" id="key-cancel">Cancel</button><button class="btn primary" id="key-save">Save</button></div>
+</div></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const LABEL = { price_drop: "Price drop", price_rise: "Price rise", back_in_stock: "Back in stock", out_of_stock: "Out of stock", new_product: "New product" };
+const state = { products: [], seenChanges: new Set(), firstLoad: true, modes: {} };
+
+function getKey() { try { return localStorage.getItem("toolkit_api_key") || ""; } catch { return ""; } }
+function setKey(v) { try { localStorage.setItem("toolkit_api_key", v); } catch {} }
+
+async function api(path, opts = {}) {
+  const headers = { ...(opts.headers || {}) };
+  if (opts.auth) headers["X-API-Key"] = getKey();
+  if (opts.body) headers["Content-Type"] = "application/json";
+  const res = await fetch(path, { ...opts, headers });
+  if (res.status === 401) { openKey(); throw new Error("API key required"); }
+  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+  return res.headers.get("content-type")?.includes("json") ? res.json() : res.text();
+}
+
+function ago(iso) {
+  if (!iso) return "–";
+  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return "just now"; if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)} h ago`; return `${Math.floor(s / 86400)} d ago`;
+}
+const money = (v, cur = "GBP") => v == null ? "–" : (cur === "GBP" ? "£" : "") + Number(v).toFixed(2);
+const dur = (ms) => ms == null ? "–" : ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`;
+
+function banner(text, kind) {
+  const b = $("#banner"); b.className = "banner show" + (kind === "ok" ? " ok" : "");
+  b.querySelector(".spin").style.display = kind === "ok" ? "none" : "block";
+  $("#banner-text").innerHTML = text;
+  if (kind === "ok") setTimeout(() => b.classList.remove("show"), 6000);
+}
+
+async function loadHealth() {
+  const h = await api("/health");
+  state.modes = h.integrations;
+  const names = { sheets: "Google Sheets", hubspot: "HubSpot", slack: "Slack", telegram: "Telegram", email: "Email" };
+  $("#pills").innerHTML = `<span class="pill ${h.database === "ok" ? "live" : ""}"><i></i>PostgreSQL</span>` +
+    Object.entries(h.integrations).filter(([, m]) => m !== "off")
+      .map(([k, m]) => `<span class="pill ${m}"><i></i>${names[k]} · ${m}</span>`).join("");
+}
+
+async function loadStats() {
+  const s = await api("/stats");
+  $("#k-products").textContent = s.products_total;
+  $("#k-stock").textContent = `${s.in_stock} in stock · ${s.out_of_stock} out`;
+  $("#k-drops").textContent = s.changes_24h.price_drop || 0;
+  $("#k-rises").textContent = s.changes_24h.price_rise || 0;
+  const stockChg = (s.changes_24h.back_in_stock || 0) + (s.changes_24h.out_of_stock || 0);
+  $("#k-stockchg").textContent = `${stockChg} stock change${stockChg === 1 ? "" : "s"}`;
+  $("#nav-products").textContent = s.products_total;
+  $("#nav-leads").textContent = s.leads_7d;
+  if (s.last_run) {
+    $("#k-run").textContent = s.last_run.status === "succeeded" ? "✓ OK" : s.last_run.status;
+    $("#k-run").className = "value " + (s.last_run.status === "failed" ? "red" : "green");
+    $("#k-run-hint").textContent = `${s.last_run.target} · ${s.last_run.items_ok} items · ${dur(s.last_run.duration_ms)} · ${ago(s.last_run.finished_at)}`;
+  }
+}
+
+function changeRow(c, flash) {
+  const pct = c.pct_change == null ? "" : `<span class="delta ${Number(c.pct_change) < 0 ? "down" : "up"}">${Number(c.pct_change) > 0 ? "+" : ""}${Number(c.pct_change).toFixed(1)}%</span>`;
+  const isPrice = c.type.startsWith("price");
+  const vals = isPrice ? `${money(c.old_value)}<span class="arrow">→</span><b>${money(c.new_value)}</b>` : `${esc(c.old_value)}<span class="arrow">→</span><b>${esc(c.new_value)}</b>`;
+  return `<tr class="click ${flash ? "flash" : ""}" data-product="${c.product_id}"><td><span class="tag t-${c.type}">${LABEL[c.type] || c.type}</span></td>
+    <td class="title-cell">${esc(c.product_title)}</td><td class="num">${vals}</td><td class="num">${pct}</td><td class="num soft">${ago(c.created_at)}</td></tr>`;
+}
+
+async function loadFeed() {
+  const changes = await api("/changes?limit=12");
+  const fresh = new Set(changes.filter((c) => !state.seenChanges.has(c.id)).map((c) => c.id));
+  $("#feed").innerHTML = changes.length ? changes.map((c) => changeRow(c, !state.firstLoad && fresh.has(c.id))).join("")
+    : `<tr><td colspan="5" class="empty">No changes yet. Run a scrape to start tracking.</td></tr>`;
+  changes.forEach((c) => state.seenChanges.add(c.id));
+  state.firstLoad = false;
+  return fresh.size;
+}
+
+function runRow(j) {
+  return `<div class="run"><span class="dot s-${j.status}"></span><div><b>${esc(j.target || j.job_type)}</b>
+    <div class="soft">${j.items_ok} ok · ${j.items_failed} failed · ${j.meta?.change_events ?? 0} changes</div></div>
+    <div class="r">${esc(j.status)}<br>${dur(j.duration_ms)} · ${ago(j.created_at)}</div></div>`;
+}
+
+async function loadRuns() {
+  const jobs = await api("/jobs?limit=30");
+  $("#runs-mini").innerHTML = jobs.slice(0, 7).map(runRow).join("") || `<div class="empty">No runs yet.</div>`;
+  $("#runs").innerHTML = jobs.map((j) => `<tr><td><span class="dot s-${j.status}" style="display:inline-block;margin-right:8px"></span>${esc(j.status)}</td>
+    <td>${esc(j.target)}</td><td class="num">${j.items_ok}</td><td class="num">${j.items_failed}</td><td class="num">${j.meta?.change_events ?? 0}</td>
+    <td class="num">${dur(j.duration_ms)}</td><td class="num soft">${ago(j.started_at || j.created_at)}</td>
+    <td class="soft" style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(j.error || "")}</td></tr>`).join("");
+}
+
+async function loadCatalogue() {
+  state.products = await api("/products?limit=1000");
+  renderCatalogue();
+}
+function renderCatalogue() {
+  const q = $("#search").value.toLowerCase();
+  const rows = state.products.filter((p) => !q || p.title.toLowerCase().includes(q));
+  $("#cat-meta").textContent = `${rows.length} of ${state.products.length} products`;
+  $("#catalogue").innerHTML = rows.slice(0, 200).map((p) => `<tr class="click" data-product="${p.id}"><td class="title-cell">${esc(p.title)}</td>
+    <td class="soft">${esc(p.source)}</td><td class="num">${money(p.current_price, p.currency)}</td>
+    <td class="${p.in_stock ? "stock-yes" : "stock-no"}">${p.in_stock ? "In stock" : "Out of stock"}${p.stock_count != null ? ` · ${p.stock_count}` : ""}</td>
+    <td class="num soft">${ago(p.last_seen_at)}</td></tr>`).join("");
+}
+
+async function openProduct(id) {
+  if (!state.products.length) await loadCatalogue();
+  const p = state.products.find((x) => x.id === id);
+  const hist = await api(`/products/${id}/history`);
+  $("#d-source").textContent = `${p.source} · ${p.category || p.external_id}`;
+  $("#d-title").textContent = p.title;
+  $("#d-price").textContent = money(p.current_price, p.currency);
+  $("#d-stock").innerHTML = p.in_stock ? '<span class="stock-yes">In stock</span>' : '<span class="stock-no">Out</span>';
+  $("#d-count").textContent = hist.length;
+  $("#d-link").href = p.url;
+  $("#d-hist").innerHTML = hist.slice(0, 12).map((h) => `<tr><td style="padding-left:0" class="soft">${new Date(h.scraped_at).toLocaleString()}</td>
+    <td class="num">${money(h.price, p.currency)}</td><td class="${h.in_stock ? "stock-yes" : "stock-no"}">${h.in_stock ? "in" : "out"}</td></tr>`).join("");
+  drawChart(hist.slice().reverse());
+  $("#drawer").classList.add("open"); $("#scrim").classList.add("open");
+}
+function drawChart(points) {
+  const svg = $("#d-chart"), W = 476, H = 190, P = 18;
+  const vals = points.map((p) => Number(p.price)).filter((v) => !isNaN(v));
+  if (vals.length < 1) { svg.innerHTML = ""; return; }
+  let min = Math.min(...vals), max = Math.max(...vals);
+  if (min === max) { min -= 1; max += 1; }
+  const x = (i) => P + (points.length === 1 ? (W - 2 * P) / 2 : (i * (W - 2 * P)) / (points.length - 1));
+  const y = (v) => H - P - ((v - min) * (H - 2 * P)) / (max - min);
+  const d = points.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(Number(p.price)).toFixed(1)}`).join(" ");
+  const area = `${d} L${x(points.length - 1)},${H - P} L${x(0)},${H - P} Z`;
+  svg.innerHTML = `<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6366f1" stop-opacity=".25"/><stop offset="1" stop-color="#6366f1" stop-opacity="0"/></linearGradient></defs>
+    <line x1="${P}" y1="${H - P}" x2="${W - P}" y2="${H - P}" stroke="#e6e8f0"/>
+    <path d="${area}" fill="url(#g)"/><path d="${d}" fill="none" stroke="#4f46e5" stroke-width="2.5" stroke-linejoin="round"/>
+    ${points.map((p, i) => `<circle cx="${x(i)}" cy="${y(Number(p.price))}" r="3.5" fill="#fff" stroke="${p.in_stock ? "#4f46e5" : "#dc2626"}" stroke-width="2"/>`).join("")}
+    <text x="${W - P}" y="12" text-anchor="end" font-size="11" fill="#94a3b8">£${max.toFixed(2)}</text>
+    <text x="${W - P}" y="${H - P - 4}" text-anchor="end" font-size="11" fill="#94a3b8">£${min.toFixed(2)}</text>`;
+}
+function closeDrawer() { $("#drawer").classList.remove("open"); $("#scrim").classList.remove("open"); }
+
+async function loadLeads() {
+  if (!getKey()) { $("#leads").innerHTML = `<tr><td colspan="6" class="empty">Set the API key to see leads.</td></tr>`; return; }
+  try {
+    const leads = await api("/leads?limit=20", { auth: true });
+    $("#leads").innerHTML = leads.length ? leads.map((l) => `<tr><td><b>${esc(l.name || "–")}</b><div class="soft">${esc(l.email)}</div></td>
+      <td>${esc(l.company || l.company_domain || "–")}</td><td>${esc(l.country || "–")}</td><td class="num"><b>${l.score}</b></td>
+      <td><span class="tag ${l.status === "synced" ? "t-price_drop" : l.status === "failed" ? "t-price_rise" : "t-out_of_stock"}">${l.status === "synced" ? (state.modes.hubspot === "live" ? "in HubSpot" : "synced · demo") : esc(l.status)}</span></td>
+      <td class="num soft">${ago(l.created_at)}</td></tr>`).join("") : `<tr><td colspan="6" class="empty">No leads yet.</td></tr>`;
+  } catch (e) { /* key dialog already shown */ }
+}
+
+function renderLead(r) {
+  const color = r.score >= 60 ? "#10b981" : r.score >= 35 ? "#f59e0b" : "#ef4444";
+  $("#lead-placeholder").style.display = "none";
+  const el = $("#lead-result"); el.classList.add("show");
+  el.innerHTML = `<div class="score-row"><div class="ring" style="background:conic-gradient(${color} 0 ${r.score}%, #eef0f5 ${r.score}% 100%)"><div>${r.score}</div></div>
+    <div><div class="badges">
+      <span class="tag ${r.qualified ? "t-price_drop" : "t-out_of_stock"}">${r.qualified ? "Qualified" : "Not qualified"}</span>
+      ${r.status === "synced" ? `<span class="tag t-back_in_stock">${state.modes.hubspot === "live" ? "Upserted to HubSpot" : "HubSpot sync · demo CSV"}</span>` : ""}
+      <span class="tag ${r.duplicate ? "t-price_rise" : "t-new_product"}">${r.duplicate ? "Duplicate: same lead returned" : "New lead"}</span></div>
+      <div class="soft" style="margin-top:10px">Domain <b>${esc(r.company_domain || "–")}</b> · Country <b>${esc(r.country || "–")}</b> · Lead #${r.id}</div></div></div>
+    ${(r.score_reasons || []).map((s) => { const [pts, ...rest] = s.split(" "); return `<div class="reason"><span>${esc(rest.join(" "))}</span><b>${esc(pts)}</b></div>`; }).join("")}`;
+}
+
+async function runScrape() {
+  const target = $("#target").value, btn = $("#run-btn");
+  if (!getKey()) { openKey(); return; }
+  btn.disabled = true; btn.textContent = "Scraping…";
+  const host = target === "books" ? "books.toscrape.com" : "quotes.toscrape.com/js (headless Chromium)";
+  const t0 = Date.now();
+  banner(`Scraping <b>${host}</b>: robots.txt checked, polite rate limit on… <span id="elapsed"></span>`);
+  const tick = setInterval(() => { const e = $("#elapsed"); if (e) e.textContent = `${((Date.now() - t0) / 1000).toFixed(1)} s`; }, 100);
+  try {
+    const job = await api(`/jobs/scrape?target=${target}&wait=true`, { method: "POST", auth: true });
+    clearInterval(tick);
+    await Promise.all([loadFeed(), loadStats(), loadRuns()]);
+    const n = job.changes.length;
+    banner(`✓ ${job.items_ok} items scraped in ${dur(job.duration_ms)}. <b>${n} change${n === 1 ? "" : "s"}</b> detected${n ? ", Google Sheet updated and alert sent" : ""}.`, "ok");
+  } catch (e) { clearInterval(tick); banner(`Run failed: ${esc(e.message)}`, "ok"); }
+  finally { btn.disabled = false; btn.textContent = "▶ Run scrape now"; }
+}
+
+function openKey() { $("#key-input").value = getKey(); $("#key-dlg").classList.add("open"); }
+const VIEWS = { overview: ["Overview", "Competitor prices, stock and alerts"], catalogue: ["Catalogue", "Every tracked product with its latest price"],
+  leads: ["Leads", "Website form leads, scored and synced to the CRM"], runs: ["Run log", "Every scheduled and manual job"] };
+function show(view) {
+  document.querySelectorAll(".nav").forEach((n) => n.classList.toggle("active", n.dataset.view === view));
+  document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active", v.id === `view-${view}`));
+  [$("#page-title").textContent, $("#page-sub").textContent] = VIEWS[view];
+  if (view === "catalogue") loadCatalogue();
+  if (view === "leads") loadLeads();
+  if (view === "runs") loadRuns();
+}
+
+document.querySelectorAll(".nav").forEach((n) => n.addEventListener("click", () => show(n.dataset.view)));
+document.addEventListener("click", (e) => { const tr = e.target.closest("tr[data-product]"); if (tr) openProduct(Number(tr.dataset.product)); });
+$("#run-btn").addEventListener("click", runScrape);
+$("#search").addEventListener("input", renderCatalogue);
+$("#d-close").addEventListener("click", closeDrawer); $("#scrim").addEventListener("click", closeDrawer);
+$("#key-link").addEventListener("click", (e) => { e.preventDefault(); openKey(); });
+$("#key-cancel").addEventListener("click", () => $("#key-dlg").classList.remove("open"));
+$("#key-save").addEventListener("click", () => { setKey($("#key-input").value.trim()); $("#key-dlg").classList.remove("open"); loadLeads(); });
+$("#lead-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!getKey()) { openKey(); return; }
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  Object.keys(data).forEach((k) => { if (data[k] === "") delete data[k]; });
+  if (data.budget_usd) data.budget_usd = Number(data.budget_usd);
+  $("#lead-btn").disabled = true;
+  try { renderLead(await api("/leads", { method: "POST", auth: true, body: JSON.stringify(data) })); await Promise.all([loadLeads(), loadStats()]); }
+  catch (err) { $("#lead-placeholder").style.display = "block"; $("#lead-placeholder").textContent = err.message; }
+  finally { $("#lead-btn").disabled = false; }
+});
+
+Promise.all([loadHealth(), loadStats(), loadFeed(), loadRuns()]).catch((e) => banner(`Could not reach the API: ${esc(e.message)}`, "ok"));
+setInterval(() => { loadStats(); loadRuns(); }, 30000);
+</script>
+</body>
+</html>

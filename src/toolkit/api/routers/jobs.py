@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Sequence
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
@@ -54,6 +55,15 @@ async def start_scrape(
     out = JobWithChanges.model_validate(done)
     out.changes = [to_change_out(e) for e in events]
     return out
+
+
+@router.get("", response_model=list[JobOut])
+async def list_jobs(
+    session: Session, limit: Annotated[int, Query(ge=1, le=200)] = 20
+) -> Sequence[JobRun]:
+    """Most recent runs first (the dashboard's run log)."""
+    stmt = select(JobRun).order_by(JobRun.created_at.desc()).limit(limit)
+    return (await session.scalars(stmt)).all()
 
 
 @router.get("/{job_id}", response_model=JobOut)

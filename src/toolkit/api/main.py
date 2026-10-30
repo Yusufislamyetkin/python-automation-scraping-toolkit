@@ -1,12 +1,17 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
-from toolkit.api.routers import changes, export, health, jobs, leads, products
+from toolkit.api.routers import changes, export, health, jobs, leads, products, stats
 from toolkit.config import get_settings
 from toolkit.logging import configure_logging
 from toolkit.services.dispatch import JobDispatcher, build_dispatcher
+
+DASHBOARD_DIR = Path(__file__).parent / "dashboard"
 
 
 def create_app(dispatcher: JobDispatcher | None = None) -> FastAPI:
@@ -28,8 +33,15 @@ def create_app(dispatcher: JobDispatcher | None = None) -> FastAPI:
         ),
         lifespan=lifespan,
     )
-    for module in (health, jobs, products, changes, leads, export):
+    for module in (health, jobs, products, changes, leads, export, stats):
         app.include_router(module.router)
+
+    app.mount("/dashboard", StaticFiles(directory=DASHBOARD_DIR, html=True), name="dashboard")
+
+    @app.get("/", include_in_schema=False)
+    async def root() -> RedirectResponse:
+        return RedirectResponse("/dashboard/")
+
     return app
 
 
