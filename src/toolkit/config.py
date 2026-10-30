@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     request_delay_seconds: float = 1.0
     max_concurrency: int = 4
     max_pages: int = 5
+    books_fetch_details: bool = False
     http_timeout_seconds: float = 20.0
     proxy_url: str | None = None
     respect_robots_txt: bool = True
