@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from toolkit.db.models import ChangeEvent, PriceSnapshot, Product
+from toolkit.db.models import ChangeEvent, ChangeType, PriceSnapshot, Product
 
 
 async def list_products(
@@ -58,5 +58,5 @@ async def changes_since(
     if since is not None:
         stmt = stmt.where(ChangeEvent.created_at >= since)
     if not include_new:
-        stmt = stmt.where(ChangeEvent.type != "new_product")
+        stmt = stmt.where(ChangeEvent.type != ChangeType.NEW_PRODUCT)
     return (await session.scalars(stmt)).all()
