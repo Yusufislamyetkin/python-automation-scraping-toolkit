@@ -118,6 +118,7 @@ class FallbackNotifier:
             try:
                 await channel.send(subject, text)
                 delivered += 1
+                log.info("alert_sent", channel=channel.name, subject=subject)
             except Exception as exc:
                 log.warning("alert_channel_failed", channel=channel.name, error=str(exc))
         if delivered == 0:

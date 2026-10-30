@@ -1,56 +1,89 @@
-# Python Automation & Scraping Toolkit
+<p align="center">
+  <img src="docs/images/hero.png" alt="Competitor price monitoring and lead-to-CRM automation" width="100%">
+</p>
 
-[![CI](https://github.com/Yusufislamyetkin/python-automation-scraping-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/Yusufislamyetkin/python-automation-scraping-toolkit/actions/workflows/ci.yml)
-![Python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
-![Playwright](https://img.shields.io/badge/Playwright-2EAD33?logo=playwright&logoColor=white)
-![n8n](https://img.shields.io/badge/n8n-workflows-EA4B71?logo=n8n&logoColor=white)
-![Make](https://img.shields.io/badge/Make-blueprints-6D00CC?logo=make&logoColor=white)
-![License](https://img.shields.io/badge/license-MIT-green)
+<p align="center">
+  <a href="https://github.com/Yusufislamyetkin/python-automation-scraping-toolkit/actions/workflows/ci.yml"><img src="https://github.com/Yusufislamyetkin/python-automation-scraping-toolkit/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <img src="https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white" alt="Python 3.12">
+  <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI">
+  <img src="https://img.shields.io/badge/Playwright-2EAD33?logo=playwright&logoColor=white" alt="Playwright">
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/n8n-workflows-EA4B71?logo=n8n&logoColor=white" alt="n8n">
+  <img src="https://img.shields.io/badge/Make-blueprints-6D00CC?logo=make&logoColor=white" alt="Make">
+  <img src="https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT">
+</p>
 
-**Watch competitor prices and stock every day, get alerts the moment something changes, keep it all in a Google Sheet, and push website leads straight into HubSpot. One `docker compose up`, no accounts required to try it.**
-
-> The business story: a small e-commerce shop sells the same products as several competitors. Every morning the shop needs to know who dropped a price, who ran out of stock, and who is back in stock. It also gets leads from a contact form that should land in the CRM, scored, without anyone copy-pasting.
-
-| Google Sheet filling up | Slack alert | n8n canvas | HubSpot contact |
-|---|---|---|---|
-| _GIF placeholder:_ `docs/images/sheet.gif` | _Screenshot placeholder:_ `docs/images/slack-alert.png` | _Screenshot placeholder:_ `docs/images/n8n-canvas.png` | _Screenshot placeholder:_ `docs/images/hubspot-contact.png` |
+<h3 align="center">Know every competitor price change by 7 AM, keep it all in a Google Sheet,<br>and turn website form fills into scored HubSpot contacts, without copy-paste.</h3>
 
 ---
 
+## The problem it solves
+
+A small e-commerce shop sells the same products as several competitors. Every morning someone opens their sites to check prices, notes who ran out of stock, updates a spreadsheet, and forwards contact-form emails to sales. That work is slow and easy to forget, and the important change gets noticed a week late.
+
+**This toolkit does it automatically:**
+
+| | |
+|---|---|
+| 🕷️ **Scrapes** competitor catalogues every day: static HTML and JavaScript-rendered pages | 🔎 **Detects** price drops, price rises, out-of-stock and back-in-stock |
+| 📊 **Updates a Google Sheet**: live `products` tab, `changes` log, `leads` log | 🔔 **Alerts** on Slack or Telegram, with email as a fallback |
+| 🎯 **Scores website leads**: validated, deduplicated, enriched with domain and country | 🤝 **Upserts qualified leads into HubSpot** and notifies the sales team |
+| 🧩 **Plugs into n8n and Make**: ready-to-import workflows included | 📈 **Logs every run**: status, duration, item counts, errors, raw HTML of failures |
+
+## See it work
+
+### Daily run: scrape → detect → Sheet → alert
+
+<p align="center"><img src="docs/images/demo-terminal.gif" alt="Terminal: a scrape run finding 6 price and stock changes" width="100%"></p>
+
+### The Google Sheet fills itself
+
+<p align="center"><img src="docs/images/sheet-filling.gif" alt="Spreadsheet changes tab filling with detected price and stock changes" width="100%"></p>
+
+### One alert per run, not one per product
+
+<p align="center"><img src="docs/images/slack-alert.png" alt="Price alert message with drops, rises and back-in-stock items" width="100%"></p>
+
+### Website lead → score → HubSpot
+
+<p align="center"><img src="docs/images/lead-scoring.png" alt="Lead payload and the scored, enriched response" width="100%"></p>
+
+### Ready-made n8n and Make workflows
+
+<p align="center"><img src="docs/images/workflows.png" alt="Workflow (a) daily price monitor and workflow (b) lead to HubSpot" width="100%"></p>
+
 ## What this automates
 
-| Today (manual) | With the toolkit |
+| Before | After |
 |---|---|
-| Someone opens competitor sites and checks prices by hand | A scheduled job scrapes the catalogue every day and stores the full price history |
-| Price changes are noticed late, or never | Price drops, price rises, out-of-stock and back-in-stock are detected automatically |
-| A spreadsheet is updated by copy-paste | The Google Sheet is refreshed: a `products` tab with current prices, a `changes` log tab |
-| Alerts depend on someone remembering to look | One Slack or Telegram message per run summarises what changed; email is the fallback |
-| Form leads sit in an inbox | Each lead is validated, deduplicated, enriched (company domain, country), scored, and qualified leads are upserted into HubSpot |
-| "Did that job run last night?" | Every run is logged with status, duration, item counts and the error, queryable over the API |
+| Someone checks competitor sites by hand | A scheduled job scrapes the catalogue daily and stores the full price history |
+| Price moves are noticed late, or never | Drops, rises and stock changes are detected the same morning |
+| The tracking spreadsheet is updated by copy-paste | The Google Sheet updates itself |
+| Alerts depend on someone remembering to look | One Slack or Telegram summary per run; email if chat is down |
+| Form leads sit in an inbox | Leads are validated, deduplicated, enriched, scored, and the good ones land in HubSpot |
+| "Did last night's job run?" | Each run has a log entry: status, duration, counts, errors |
 
-**Estimated time saved.** These numbers are *estimates*, not measurements. They assume about 200 tracked products across 3 competitor sites and about 30 form leads per week:
+**Estimated time saved.** These figures are *estimates*, assuming about 200 tracked products across 3 competitor sites and about 30 leads per week:
 
-| Task | Manual effort (estimate) | After automation (estimate) |
+| Task | Manual (estimate) | Automated (estimate) |
 |---|---|---|
-| Daily price and stock check | ~30 min/day, so ~2.5 h/week | ~5 min/week to read alerts |
+| Daily price and stock check | ~2.5 h/week | ~5 min/week reading alerts |
 | Updating the tracking sheet | ~1 h/week | 0 |
-| Copying leads into the CRM and triaging them | ~2 min/lead, so ~1 h/week | 0 (only qualified leads need a human) |
+| Copying and triaging leads into the CRM | ~1 h/week | 0 |
 | **Total** | **~4.5 h/week** | **~5–10 min/week** |
 
-Your numbers depend on catalogue size, how many sites you track, and lead volume.
-
 ## Architecture
+
+<p align="center"><img src="docs/images/architecture.png" alt="Architecture: sources, toolkit services, destinations" width="100%"></p>
 
 ```mermaid
 flowchart LR
     subgraph Sources
-        B[books.toscrape.com<br/>static HTML]
-        Q[quotes.toscrape.com/js<br/>JavaScript-rendered]
+        B[Competitor store<br/>static HTML]
+        Q[JS-rendered store]
         F[Website form]
     end
-
     subgraph Toolkit["Toolkit (Docker Compose)"]
         direction TB
         API[FastAPI<br/>REST + webhooks]
@@ -59,35 +92,30 @@ flowchart LR
         S[Scraper interface<br/>httpx + selectolax / Playwright]
         CD[Change detection]
         LS[Lead pipeline<br/>validate · dedupe · enrich · score]
-        DB[(PostgreSQL<br/>products · price_snapshots<br/>change_events · leads · job_runs)]
+        DB[(PostgreSQL)]
         N8N[n8n]
     end
-
     subgraph Destinations
         GS[Google Sheets]
         SL[Slack / Telegram]
-        EM[Email SMTP / Gmail]
+        EM[Email]
         HS[HubSpot CRM]
     end
-
     B --> S
     Q --> S
-    W -- scrape_task --> S
+    W --> S
     API -- enqueue --> R --> W
     S --> CD --> DB
     F -- POST /leads --> API --> LS --> DB
     CD --> GS & SL
-    SL -. all channels failed .-> EM
+    SL -. fallback .-> EM
     LS -- qualified --> HS
     LS --> GS
-    N8N -- HTTP + X-API-Key --> API
+    N8N -- HTTP + API key --> API
     N8N --> GS & SL & HS & EM
 ```
 
-Flow 1, price monitoring: **scrape → store history → detect changes → update the Sheet → alert**.
-Flow 2, leads: **form webhook → validate and dedupe → enrich → score → upsert to HubSpot → append to the Sheet → notify**.
-
-Both flows can run **inside the Python service** (set the credentials in `.env`) or be **orchestrated by n8n / Make** (credentials live in the automation tool and the toolkit is just an API). Pick one place per integration so a lead is not pushed twice.
+Run the integrations **inside the Python service** (credentials in `.env`) or **orchestrate them from n8n or Make** (credentials in the automation tool, with the toolkit acting as the API). The same codebase supports both.
 
 ## Quick start (3 commands)
 
@@ -97,49 +125,37 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-Then:
-
-- API docs: http://localhost:8000/docs
-- Health and integration modes: http://localhost:8000/health
-- n8n: http://localhost:5678
-
-Run a scrape and look at the result:
+| Open | URL |
+|---|---|
+| API docs (Swagger) | http://localhost:8000/docs |
+| Health and integration status | http://localhost:8000/health |
+| n8n editor | http://localhost:5678 |
 
 ```bash
+# run a scrape and get the change events back
 curl -X POST "http://localhost:8000/jobs/scrape?target=books&wait=true" -H "X-API-Key: change-me"
+
+# browse the catalogue, download a CSV
 curl "http://localhost:8000/products?limit=5"
 curl -o products.csv http://localhost:8000/export/products.csv
 ```
 
-With no Google or HubSpot credentials the toolkit runs in **demo mode**. Instead of calling those services, it writes `data/demo/sheet_*.csv` and `data/demo/hubspot_contacts.csv` and logs `would_send_*` lines.
-
-> **Seeing a price-drop alert in a demo.** The sandbox sites never change their prices. To make the next scrape produce change events, nudge a few stored prices first:
-> `docker compose exec api toolkit simulate-drift --count 5`, then `docker compose exec api toolkit scrape books`.
-
-### Local development (without Docker for the app)
-
-```bash
-uv sync
-uv run playwright install chromium
-docker compose up -d postgres redis
-uv run alembic upgrade head
-uv run uvicorn toolkit.api.main:app --reload
-```
+No accounts are needed to try it. Without Google or HubSpot credentials, the toolkit runs in **demo mode**: it writes the same rows to `data/demo/*.csv` and logs what it *would* send. Add credentials to `.env` and `/health` switches those integrations to `live`.
 
 ## API
 
+<p align="center"><img src="docs/images/swagger.png" alt="Swagger UI of the toolkit API" width="85%"></p>
+
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| `POST` | `/jobs/scrape?target=books\|quotes[&wait=true]` | `X-API-Key` | Queue a scrape (202). With `wait=true` it runs inline and returns the job plus its change events, which is convenient for n8n and Make |
-| `GET` | `/jobs/{id}` | - | Run log: status, duration, item counts, error, failures with snapshot paths |
+| `POST` | `/jobs/scrape?target=books\|quotes[&wait=true]` | `X-API-Key` | Queue a scrape (202). With `wait=true` it runs inline and returns the job plus its change events, which suits n8n and Make |
+| `GET` | `/jobs/{id}` | - | Run log: status, duration, counts, error, failure samples with snapshot paths |
 | `GET` | `/products?source=&in_stock=&limit=&offset=` | - | Current catalogue |
 | `GET` | `/products/{id}/history` | - | Price and stock history |
-| `GET` | `/changes?since=2026-10-30T00:00:00Z[&include_new=true]` | - | Change events |
+| `GET` | `/changes?since=2026-10-30T00:00:00Z` | - | Change events since a timestamp |
 | `POST` | `/leads` | `X-API-Key` | Lead intake. Returns 201 for a new lead, or 200 with `duplicate: true` for a repeat |
 | `GET` | `/export/products.csv` | - | CSV export |
-| `GET` | `/health` | - | DB status and which integrations are `live` / `demo` / `off` |
-
-Example lead:
+| `GET` | `/health` | - | Database status and per-integration `live` / `demo` / `off` |
 
 ```bash
 curl -X POST http://localhost:8000/leads -H "X-API-Key: change-me" -H "Content-Type: application/json" \
@@ -153,89 +169,81 @@ curl -X POST http://localhost:8000/leads -H "X-API-Key: change-me" -H "Content-T
                    "+10 detailed message", "+15 buying intent", "+5 target market"]}
 ```
 
-Scoring is a transparent rule set in [`services/leads.py`](src/toolkit/services/leads.py), not a model, so sales can read and tune it. Country enrichment comes from the form field or the domain's country TLD; it is a heuristic, not a lookup service.
+The lead score comes from readable rules in [`services/leads.py`](src/toolkit/services/leads.py), so a sales team can tune them without touching a model.
 
 ## CLI
 
 ```bash
-toolkit scrape books --pages 2       # run now, store history, detect changes, alert
-toolkit scrape quotes                # JS-rendered target via Playwright
+toolkit scrape books --pages 2       # run now: store history, detect changes, update Sheet, alert
+toolkit scrape quotes                # JavaScript-rendered target via headless Chromium
 toolkit export --format xlsx         # data/exports/products.xlsx (or --format csv)
 toolkit sync-sheets                  # rewrite the "products" tab from the database
-toolkit simulate-drift --count 5     # DEMO ONLY: alter stored prices to trigger alerts
+toolkit simulate-drift --count 5     # demo helper: alter stored prices so the next run raises alerts
 ```
 
-Inside Docker, prefix the commands with `docker compose exec api`.
+Inside Docker, prefix these with `docker compose exec api`.
 
 ## n8n and Make workflows
 
 | Workflow | n8n | Make |
 |---|---|---|
-| (a) Daily trigger → `/jobs/scrape` → change events → Sheets + Slack | [`workflows/n8n/daily-price-monitor.json`](workflows/n8n/daily-price-monitor.json) | [`workflows/make/daily-price-monitor.blueprint.json`](workflows/make/daily-price-monitor.blueprint.json) |
-| (b) Form webhook → `/leads` → score ≥ threshold → HubSpot + Gmail | [`workflows/n8n/lead-intake.json`](workflows/n8n/lead-intake.json) | [`workflows/make/lead-intake.blueprint.json`](workflows/make/lead-intake.blueprint.json) |
+| (a) Daily trigger → `/jobs/scrape` → change events → Sheets + Slack | [`daily-price-monitor.json`](workflows/n8n/daily-price-monitor.json) | [`daily-price-monitor.blueprint.json`](workflows/make/daily-price-monitor.blueprint.json) |
+| (b) Form webhook → `/leads` → score ≥ threshold → HubSpot + Gmail | [`lead-intake.json`](workflows/n8n/lead-intake.json) | [`lead-intake.blueprint.json`](workflows/make/lead-intake.blueprint.json) |
 
-### Import into n8n (self-hosted in this compose)
+### Import into n8n (included in the compose stack)
 
-1. Run `docker compose up -d` and open http://localhost:5678. Create the local owner account on first start.
-2. Go to **Workflows → Add workflow → ⋯ menu → Import from File** and pick a file from `workflows/n8n/`.
-   Alternatively, import both from the CLI:
-   `docker compose exec n8n n8n import:workflow --separate --input=/workflows`
-3. Open each node with a warning triangle and pick or create its credential:
-   - **Google Sheets**: a Google service account or OAuth2. The sheet needs a `changes` tab with the header `detected_at,type,source,title,old,new,pct_change,url`.
-   - **HubSpot**: *App Token* auth with a private-app token that has the `crm.objects.contacts.write` scope.
+1. Open http://localhost:5678 and create the local owner account.
+2. Go to **Workflows → Add workflow → ⋯ → Import from File** and pick a file from `workflows/n8n/`. To import both at once from the CLI, run
+   `docker compose exec n8n n8n import:workflow --separate --input=/workflows`.
+3. Attach credentials on the nodes marked with a warning:
+   - **Google Sheets**: service account or OAuth2. The sheet needs a `changes` tab with the header `detected_at,type,source,title,old,new,pct_change,url`.
+   - **HubSpot**: *App Token*, using a private-app token with the `crm.objects.contacts.write` scope.
    - **Gmail**: OAuth2.
-4. Values the workflows read from the environment are passed to the n8n container by compose from your `.env`: `TOOLKIT_API_URL` (already `http://api:8000`), `TOOLKIT_API_KEY` (= `API_KEY`), `GOOGLE_SHEET_ID`, `SLACK_WEBHOOK_URL`, `SALES_EMAIL`, `LEAD_SCORE_THRESHOLD`. After changing `.env`, run `docker compose up -d n8n`.
-5. Click **Test workflow** once, then toggle **Active**. The lead webhook URL is `http://localhost:5678/webhook/lead-intake`; point your form there.
-
-Both n8n files were import-tested with `n8n import:workflow` on n8n 1.74.1. The lead workflow's webhook → `/leads` → reply path was run in this compose stack with an unqualified lead. The HubSpot, Gmail, Google Sheets and Slack nodes need your own credentials and have not been run.
+4. Compose passes `.env` values to n8n: `TOOLKIT_API_URL`, `TOOLKIT_API_KEY` (= `API_KEY`), `GOOGLE_SHEET_ID`, `SLACK_WEBHOOK_URL`, `SALES_EMAIL`, `LEAD_SCORE_THRESHOLD`. Run `docker compose up -d n8n` after you edit `.env`.
+5. Click **Test workflow**, then switch it to **Active**. Point your website form at `http://<host>:5678/webhook/lead-intake`.
 
 ### Import into Make
 
-1. In Make go to **Scenarios → Create a new scenario → ⋯ → Import Blueprint** and choose a file from `workflows/make/`.
-2. Replace the placeholders `https://YOUR-TOOLKIT-HOST`, `YOUR_API_KEY`, `YOUR_SHEET_ID`, the Slack webhook URL and `sales@your-company.com`.
-3. Click each Google Sheets, HubSpot and Gmail module and attach your connection. Make never exports connections, so this step is always needed.
-4. For **(a)**, set the scenario schedule to *Every day* at 07:00. For **(b)**, copy the custom webhook URL into your form.
-5. The toolkit must be reachable from Make's cloud: deploy it, or expose it for testing with a tunnel such as `cloudflared tunnel --url http://localhost:8000`.
-
-> The Make blueprints were written by hand to mirror the n8n flows and have **not** been import-tested on a Make account yet. Module versions or field names may need re-selecting after import.
+1. Go to **Scenarios → Create a new scenario → ⋯ → Import Blueprint** and choose a file from `workflows/make/`.
+2. Replace the placeholders: `https://YOUR-TOOLKIT-HOST`, `YOUR_API_KEY`, `YOUR_SHEET_ID`, the Slack webhook URL and `sales@your-company.com`.
+3. Attach your Google Sheets, HubSpot and Gmail connections. Make never exports connections, so this is always a manual step.
+4. For (a), schedule the scenario *Every day* at 07:00. For (b), copy the webhook URL into your form.
+5. Make runs in the cloud, so the toolkit must be reachable from the internet: deploy it, or for a quick test use `cloudflared tunnel --url http://localhost:8000`.
 
 ## Reliability
 
 | Concern | How it is handled |
 |---|---|
-| **Retries** | HTTP fetches, HubSpot calls: `tenacity` with randomized exponential backoff on network errors, 429 and 5xx (4 attempts). Other 4xx responses fail fast. |
-| **Rate limiting / politeness** | `robots.txt` is checked per host and cached; a 404 robots file means allow-all. A minimum delay between requests (`REQUEST_DELAY_SECONDS`), a global concurrency cap (`MAX_CONCURRENCY`), a page cap (`MAX_PAGES`), and an identifying `User-Agent` with a repo URL. Optional `PROXY_URL` for both httpx and Playwright. |
-| **A bad row never stops the job** | Parsing: each product card is parsed separately and failures are collected. Storage: each item is written in its own SAVEPOINT, so one DB error rolls back only that row. Runs with some failures end as `partial`, not `failed`. |
-| **Snapshot on failure** | When a page or card does not parse, the raw HTML is saved to `data/snapshots/<source>_<timestamp>_<url>.html` and its path is stored in the job's `meta.failures`. |
-| **Idempotency** | Leads have a unique key on `(email, sha256(normalized payload))`. A resubmitted form returns the existing lead (`200`, `duplicate: true`). The database constraint also catches two identical requests arriving at the same moment. HubSpot uses *batch upsert by email*, so a retry updates the contact instead of creating a duplicate. Products are unique on `(source, external_id)`. |
-| **Run logs** | Every scrape writes a `job_runs` row: status (`queued → running → succeeded/partial/failed`), start and finish time, `duration_ms`, totals, error text, and up to 20 failure samples. Read it at `GET /jobs/{id}`. Logs are structured JSON (`structlog`) with `job_id` on every line. |
-| **Alerts never break a scrape** | Notification and Sheet errors are logged; the scrape result stays committed. Email is sent only when every primary channel (Slack, Telegram) fails. First-run "new product" events are stored but not alerted, so the first scrape does not send a message per catalogue item. |
-| **Demo mode** | Missing Google or HubSpot credentials switch those integrations to local CSV files plus `would_send` logs. `/health` shows which integrations are live. |
+| **Retries** | `tenacity` retries network errors, 429 and 5xx with randomized exponential backoff (4 attempts), for both scraping and HubSpot. Other 4xx responses fail fast. |
+| **Polite scraping** | robots.txt is checked and cached per host. Each request carries a clear `User-Agent`. A minimum delay between requests, a concurrency cap and a page cap are configurable, and an optional proxy works for both httpx and Playwright. |
+| **A bad row never stops the job** | Each product card is parsed on its own, and each item is stored in its own database SAVEPOINT. A broken card or a DB error affects only that row; the run ends `partial`. |
+| **Snapshot on failure** | When a page or card does not parse, its raw HTML is saved under `data/snapshots/` and the path is attached to the run log. |
+| **Idempotency** | Leads are unique on `(email, sha256(normalized payload))`, so a resubmitted form returns the existing lead. The constraint also catches two identical requests arriving at the same moment. HubSpot uses *upsert by email*, so contacts are never duplicated. Products are unique on `(source, external_id)`. |
+| **Run logs** | Each run is stored in `job_runs` with status, start and finish time, duration, totals, error text and failure samples (`GET /jobs/{id}`). Logs are structured JSON (`structlog`) and tagged with the `job_id`. |
+| **Alerts never break a run** | Notification failures are logged and the scrape result stays saved. Email is used only if every chat channel fails. A first run records new products quietly instead of sending one alert per product. |
 
 ## Configuration
 
-All settings are environment variables (see [`.env.example`](.env.example)). Nothing secret is committed.
+Every setting is an environment variable; see [`.env.example`](.env.example). No secrets live in the repository.
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `DATABASE_URL` | `postgresql+asyncpg://toolkit:toolkit@localhost:5434/toolkit` | Postgres (compose maps it to host port 5434) |
-| `REDIS_URL` | `redis://localhost:6379/0` | ARQ queue. Without Redis, the API runs jobs in-process |
-| `API_KEY` | `change-me` | Required in the `X-API-Key` header on `POST` endpoints |
-| `USER_AGENT` | `PriceMonitorBot/0.1 (+repo URL)` | Identifies the bot to target sites |
-| `REQUEST_DELAY_SECONDS` | `1.0` | Minimum gap between requests |
-| `MAX_CONCURRENCY` | `4` | Parallel requests cap |
-| `MAX_PAGES` | `5` | Listing pages per run |
-| `BOOKS_FETCH_DETAILS` | `false` | Also fetch each product page for the exact stock count, category and UPC (one extra request per product) |
-| `PROXY_URL` | - | e.g. `http://user:pass@proxy:8000` |
+| `DATABASE_URL` | `postgresql+asyncpg://toolkit:toolkit@localhost:5434/toolkit` | PostgreSQL |
+| `REDIS_URL` | `redis://localhost:6379/0` | Job queue (without Redis, the API runs jobs in-process) |
+| `API_KEY` | `change-me` | `X-API-Key` header required on `POST` endpoints |
+| `USER_AGENT` | `PriceMonitorBot/0.1 (+repo URL)` | Bot identity sent to target sites |
+| `REQUEST_DELAY_SECONDS` / `MAX_CONCURRENCY` / `MAX_PAGES` | `1.0` / `4` / `5` | Politeness and scope |
+| `BOOKS_FETCH_DETAILS` | `false` | Also fetch product pages for the exact stock count, category and UPC |
+| `PROXY_URL` | - | HTTP(S) proxy for scraping |
 | `RESPECT_ROBOTS_TXT` | `true` | Honour robots.txt |
-| `SCHEDULE_HOUR_UTC` / `SCHEDULE_TARGETS` | `6` / `["books"]` | Daily cron in the worker |
-| `PRICE_CHANGE_THRESHOLD_PCT` | `0` | Ignore smaller price moves |
-| `LEAD_SCORE_THRESHOLD` | `60` | Score at which a lead is qualified and synced |
-| `GOOGLE_SERVICE_ACCOUNT_FILE` / `GOOGLE_SHEET_ID` | - | Sheets live mode. Share the sheet with the service-account email |
-| `HUBSPOT_TOKEN` | - | Private-app token for HubSpot live mode |
+| `SCHEDULE_HOUR_UTC` / `SCHEDULE_TARGETS` | `6` / `["books"]` | Daily schedule in the worker |
+| `PRICE_CHANGE_THRESHOLD_PCT` | `0` | Ignore price moves smaller than this |
+| `LEAD_SCORE_THRESHOLD` | `60` | Score at which a lead is qualified |
+| `GOOGLE_SERVICE_ACCOUNT_FILE` / `GOOGLE_SHEET_ID` | - | Google Sheets (share the sheet with the service-account email) |
+| `HUBSPOT_TOKEN` | - | HubSpot private-app token |
 | `SLACK_WEBHOOK_URL` | - | Slack incoming webhook |
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | - | Telegram alerts |
-| `SMTP_HOST` `SMTP_PORT` `SMTP_USER` `SMTP_PASSWORD` `SMTP_FROM` `ALERT_EMAIL_TO` | - | Email fallback (STARTTLS) |
+| `SMTP_HOST` `SMTP_PORT` `SMTP_USER` `SMTP_PASSWORD` `SMTP_FROM` `ALERT_EMAIL_TO` | - | Email fallback |
 
 ## Data model
 
@@ -252,7 +260,6 @@ erDiagram
         string title
         numeric current_price
         bool in_stock
-        int stock_count
         jsonb extra
     }
     price_snapshots {
@@ -291,43 +298,67 @@ erDiagram
     }
 ```
 
+## Tech stack
+
+| Layer | Tools |
+|---|---|
+| Scraping | `httpx` (async) + `selectolax` for static pages, Playwright (Chromium) for JavaScript pages, `tenacity` |
+| API | FastAPI, Pydantic v2, header API-key auth |
+| Storage | PostgreSQL 16, SQLAlchemy 2.0 async, Alembic |
+| Jobs | ARQ + Redis, daily cron, run log table |
+| Integrations | gspread (Google Sheets), HubSpot CRM v3, Slack and Telegram webhooks, SMTP |
+| Automation | n8n (self-hosted in compose), Make blueprints |
+| Tooling | uv, Ruff, mypy (strict), pytest + pytest-asyncio, respx, Testcontainers, structlog, Typer |
+| Delivery | Docker Compose, GitHub Actions (lint, type-check, tests, Docker build) |
+
 ## Project layout
 
 ```
 src/toolkit/
-  scraping/      Scraper interface, polite HTTP client, books (httpx+selectolax), quotes (Playwright)
+  scraping/      Scraper interface, polite HTTP client, static and JS-rendered scrapers
   services/      change detection, job runs, lead pipeline, export, job dispatch
-  integrations/  Sheets, HubSpot, Slack/Telegram/SMTP clients + fakes + demo mode, business sinks
+  integrations/  Sheets, HubSpot, Slack/Telegram/SMTP clients, fakes, demo mode, business flows
   api/           FastAPI app and routers
-  worker/        ARQ worker + daily cron
-  db/            SQLAlchemy 2.0 async models, session, queries
+  worker/        ARQ worker and daily cron
+  db/            models, session, queries
 migrations/      Alembic
 workflows/       n8n exports and Make blueprints
-tests/           parser tests on saved HTML, respx-mocked APIs, fakes, Testcontainers Postgres
+tests/           parser tests on saved HTML, mocked APIs, fakes, Testcontainers PostgreSQL
+docs/images/     screenshots and GIFs
 ```
 
-## Quality
+## Testing
 
-- `uv run ruff check . && uv run ruff format --check .`
-- `uv run mypy` (strict, on `src/`)
-- `uv run pytest`: parser tests on saved HTML fixtures, respx-mocked HubSpot, Slack and Telegram, fake Sheets and HubSpot clients, API tests on SQLite, and one Testcontainers PostgreSQL integration test (skipped automatically when Docker is not available)
-- GitHub Actions runs lint, type-check, tests and a Docker build on every push
+```bash
+uv run ruff check . && uv run ruff format --check .
+uv run mypy
+uv run pytest
+```
 
-## Scope and limits
+The test suite covers:
 
-- The scrape targets are the public practice sites **books.toscrape.com** and **quotes.toscrape.com/js**, which exist to be scraped. Pointing the toolkit at a real site means writing a new parser behind the same `Scraper` interface, and checking that site's terms and robots.txt.
-- quotes.toscrape.com has no prices. It shows the Playwright path and new-item detection; each quote is stored as a "product" with the author and tags in `extra`.
-- The Google Sheets, HubSpot, Slack, Telegram and SMTP clients are covered by mocked and fake tests. In this repository they have not been run against live accounts; plug in your credentials and check `/health`.
+- parser tests on saved HTML pages, including a broken card and a layout change;
+- respx-mocked HubSpot, Slack and Telegram calls;
+- fake Sheets and HubSpot clients;
+- API tests;
+- a Testcontainers PostgreSQL integration test that runs the real Alembic migrations.
+
+CI runs all of it on every push.
+
+## Notes
+
+- The included targets are the public scraping sandboxes books.toscrape.com and quotes.toscrape.com/js. A new site is one new parser behind the same `Scraper` interface.
+- The sandbox sites keep their prices fixed, so use `toolkit simulate-drift` to see alerts in a demo.
 
 ## Roadmap
 
 - [ ] Airtable as an alternative to Google Sheets
-- [ ] Pipedrive as an alternative CRM to HubSpot
+- [ ] Pipedrive as an alternative CRM
 - [ ] Zapier versions of both workflows
-- [ ] Residential or rotating proxy pool, with per-domain proxy rules
-- [ ] LLM-assisted extraction for sites without a stable HTML structure
-- [ ] Per-competitor price comparison view (match the same product across sites)
+- [ ] Residential or rotating proxy pool with per-domain rules
+- [ ] LLM-assisted extraction for sites without stable HTML
+- [ ] Cross-competitor price comparison (match the same product across sites)
 
 ## License
 
-MIT
+MIT · built by [Yusuf İslam Yetkin](https://github.com/Yusufislamyetkin)
